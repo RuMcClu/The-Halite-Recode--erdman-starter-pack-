@@ -15,7 +15,7 @@ import logging
 logging.basicConfig(filename='debugging\debug.log',level=logging.DEBUG, filemode = 'w')
 logging.debug('initiating new run')
 
-def border_move(neighbour,square,weight,dist2,falloff):
+def border_move(borderlen,neighbour,square,weight,dist2,falloff):
 #    _, direction = next(((neighbor.strength, direction) for direction, neighbor in enumerate(game_map.neighbors(square)) if neighbor.owner != myID and neighbor.strength < square.strength), (None, None))
 #    if direction is not None:
 #        return Move(square, direction),
@@ -53,7 +53,7 @@ def border_move(neighbour,square,weight,dist2,falloff):
             if game_map.get_target(square,np.argmin(movedists)).strength < square.strength:
                 return Move(square,np.argmin(movedists)),
 #return Move(square,STILL),
-            else:
+            elif borderlen > 2:
                 for direction2, neighbor2 in enumerate(game_map.neighbors(square)):
                     if neighbor2.owner == myID:
                         if game_map.get_target(square,np.argmin(movedists)).strength < min(square.strength + neighbor2.strength, 255):
@@ -70,7 +70,8 @@ def border_move(neighbour,square,weight,dist2,falloff):
                         for direction2, neighbor2 in enumerate(game_map.neighbors(square)):
                             if neighbor2.owner == myID:
                                 if neighbor.strength < min(square.strength + neighbor2.strength, 255):
-                                    return Move(neighbor2,hlt.opposite_cardinal(direction2)), Move(square,STILL), neighbor2
+                                    if borderlen:
+                                        return Move(neighbor2,hlt.opposite_cardinal(direction2)), Move(square,STILL), neighbor2
                                 else:
                                     return Move(square, STILL),
     #else: #square.strength < square.production * 5:
@@ -128,11 +129,12 @@ while True:
     #            break
     #logging.debug(weighter)
     y=True
+    borderlen = len(border)
     for square in border:
         while square not in skip_square:
             t1 = time.time()
             #logging.debug(weighter[square])
-            the_move = border_move(weighter[square],square, weight, dists[square.x,square.y,:,:], 2.5)
+            the_move = border_move(borderlen,weighter[square],square, weight, dists[square.x,square.y,:,:], 2.5)
             if len(the_move) == 3:
                 moves.append(the_move[0])
                 moves.append(the_move[1])
